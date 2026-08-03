@@ -1,0 +1,41 @@
+{
+  "users": {
+    "ivanov@corp.local": {
+      "locked": false
+    },
+    "petrova@corp.local": {
+      "locked": true
+    },
+    "sidorov@corp.local": {
+      "locked": false
+    },
+    "kuznetsova@corp.local": {
+      "locked": false
+    },
+    "smirnov@corp.local": {
+      "locked": true
+    }
+  },
+  "sessions": {
+    "101": {
+      "email": "ivanov@corp.local",
+      "status": "active"
+    },
+    "102": {
+      "email": "petrova@corp.local",
+      "status": "sleep"
+    },
+    "103": {
+      "email": "kuznetsova@corp.local",
+      "status": "active"
+    },
+    "104": {
+      "email": "smirnov@corp.local",
+      "status": "active"
+    },
+    "105": {
+      "email": "ivanov@corp.local",
+      "status": "active"
+    }
+  }
+}

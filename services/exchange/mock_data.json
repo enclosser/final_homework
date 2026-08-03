@@ -1,0 +1,34 @@
+{
+  "mailboxes": {
+    "ivanov@corp.local": {
+      "display_name": "Иванов Иван",
+      "is_active": true,
+      "size_mb": 48512,
+      "quota_mb": 50000
+    },
+    "petrova@corp.local": {
+      "display_name": "Петрова Анна",
+      "is_active": true,
+      "size_mb": 50210,
+      "quota_mb": 50000
+    },
+    "sidorov@corp.local": {
+      "display_name": "Сидоров Пётр",
+      "is_active": false,
+      "size_mb": 12000,
+      "quota_mb": 50000
+    },
+    "kuznetsova@corp.local": {
+      "display_name": "Кузнецова Мария",
+      "is_active": true,
+      "size_mb": 49999,
+      "quota_mb": 50000
+    },
+    "smirnov@corp.local": {
+      "display_name": "Смирнов Алексей",
+      "is_active": true,
+      "size_mb": 3400,
+      "quota_mb": 50000
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "users": {
+    "ivanov@corp.local": {
+      "username": "ivanov",
+      "enabled": true,
+      "locked": true,
+      "password_expired": false
+    },
+    "petrova@corp.local": {
+      "username": "petrova",
+      "enabled": true,
+      "locked": false,
+      "password_expired": true
+    },
+    "sidorov@corp.local": {
+      "username": "sidorov",
+      "enabled": false,
+      "locked": false,
+      "password_expired": false
+    },
+    "kuznetsova@corp.local": {
+      "username": "kuznetsova",
+      "enabled": true,
+      "locked": false,
+      "password_expired": false
+    },
+    "smirnov@corp.local": {
+      "username": "smirnov",
+      "enabled": true,
+      "locked": false,
+      "password_expired": true
+    }
+  }
+}
