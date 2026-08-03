@@ -1,0 +1,14 @@
+{
+  "name": "search_knowledge_base",
+  "description": "Найти в базе знаний документацию по проблеме: причины и пошаговое решение. Вызывай, когда пользователь описывает симптом технической проблемы.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Краткое описание проблемы"
+      }
+    },
+    "required": ["query"]
+  }
+}

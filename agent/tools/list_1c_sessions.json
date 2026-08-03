@@ -1,0 +1,8 @@
+{
+  "name": "list_1c_sessions",
+  "description": "Получить список активных сессий 1С (id, пользователь, статус).",
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  }
+}

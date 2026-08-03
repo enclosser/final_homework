@@ -1,9 +1,3 @@
-"""Эмулятор Microsoft Exchange.
-
-Мок-данные почтовых ящиков хранятся в ``mock_data.json`` (ключ — e-mail).
-Эндпоинты принимают e-mail и изменяют данные в памяти (учебный проект).
-"""
-
 import json
 from pathlib import Path
 

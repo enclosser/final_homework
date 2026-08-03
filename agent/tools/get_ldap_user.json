@@ -1,0 +1,13 @@
+{
+  "name": "get_ldap_user",
+  "description": "Получить состояние учётной записи в LDAP: активна, заблокирована, истёк ли пароль.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "email": {
+        "type": "string"
+      }
+    },
+    "required": ["email"]
+  }
+}

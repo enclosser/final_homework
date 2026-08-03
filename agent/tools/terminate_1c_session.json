@@ -1,0 +1,14 @@
+{
+  "name": "terminate_1c_session",
+  "description": "Завершить сессию 1С по её id. Чувствительная операция: требует подтверждения.",
+  "sensitive": true,
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "session_id": {
+        "type": "integer"
+      }
+    },
+    "required": ["session_id"]
+  }
+}

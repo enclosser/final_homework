@@ -1,0 +1,14 @@
+{
+  "name": "unlock_1c_user",
+  "description": "Разблокировать пользователя в 1С. Чувствительная операция: требует подтверждения.",
+  "sensitive": true,
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "email": {
+        "type": "string"
+      }
+    },
+    "required": ["email"]
+  }
+}

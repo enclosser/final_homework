@@ -1,0 +1,13 @@
+{
+  "name": "get_exchange_mailbox",
+  "description": "Получить состояние почтового ящика Exchange: размер, квота, активность.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "email": {
+        "type": "string"
+      }
+    },
+    "required": ["email"]
+  }
+}
