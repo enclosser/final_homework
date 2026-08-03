@@ -1,0 +1,20 @@
+[
+  {
+    "name": "vpn_out_of_scope",
+    "email": "ivanov@corp.local",
+    "user_input": "Настройте мне корпоративный VPN для удалённой работы",
+    "expect": "escalated"
+  },
+  {
+    "name": "ldap_login_issue",
+    "email": "petrova@corp.local",
+    "user_input": "Не могу войти в систему, учётная запись заблокирована",
+    "expect": "resolved"
+  },
+  {
+    "name": "exchange_mailbox_full",
+    "email": "kuznetsova@corp.local",
+    "user_input": "У меня переполнен почтовый ящик, не могу отправлять письма",
+    "expect": "resolved"
+  }
+]

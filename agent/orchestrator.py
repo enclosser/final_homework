@@ -44,6 +44,10 @@ class AgentState(TypedDict, total=False):
     limit_note_sent: bool
     tools_used: int
     nudged: bool
+    llm_calls: int
+    prompt_tokens: int
+    completion_tokens: int
+    escalated: bool
 
 
 def build_system_prompt(email: str) -> str:
@@ -68,7 +72,7 @@ def _short(result: dict, limit: int = 200) -> str:
 def classify(state: AgentState) -> dict:
     """Лёгкая модель определяет тему обращения и собирает стартовые сообщения."""
     started = time.monotonic()
-    msg, _ = llm.complete(
+    msg, usage = llm.complete(
         [
             {'role': 'system', 'content': CLASSIFY_PROMPT},
             {'role': 'user', 'content': state['user_input']},
@@ -77,6 +81,8 @@ def classify(state: AgentState) -> dict:
     )
     text = (msg.content or '').strip().lower()
     topic = next((t for t in ('ldap', 'exchange', 'onec') if t in text), 'other')
+    pt = getattr(usage, 'prompt_tokens', 0) or 0
+    ct = getattr(usage, 'completion_tokens', 0) or 0
 
     messages = [
         {'role': 'system', 'content': build_system_prompt(state['email'])},
@@ -85,9 +91,12 @@ def classify(state: AgentState) -> dict:
         {'role': 'user', 'content': state['user_input']},
     ]
     log_step('classify', detail=f'тема={topic}', model=settings.LM_STUDIO_MODEL_LIGHT,
-             seconds=time.monotonic() - started)
+             seconds=time.monotonic() - started, prompt_tokens=pt, completion_tokens=ct)
     return {'topic': topic, 'messages': messages, 'pending_tools': [],
-            'tools_used': 0, 'nudged': False}
+            'tools_used': 0, 'nudged': False,
+            'llm_calls': state.get('llm_calls', 0) + 1,
+            'prompt_tokens': state.get('prompt_tokens', 0) + pt,
+            'completion_tokens': state.get('completion_tokens', 0) + ct}
 
 
 def decide(state: AgentState) -> dict:
@@ -98,6 +107,9 @@ def decide(state: AgentState) -> dict:
 
     resp = llm.chat(state['messages'], route='heavy', tools=toolkit.TOOLS)
     msg = resp.choices[0].message
+    usage = getattr(resp, 'usage', None)
+    pt = getattr(usage, 'prompt_tokens', 0) or 0
+    ct = getattr(usage, 'completion_tokens', 0) or 0
 
     new_messages = state['messages'] + [{'role': 'assistant', 'content': msg.content or ''}]
     pending: list[dict[str, Any]] = []
@@ -119,8 +131,11 @@ def decide(state: AgentState) -> dict:
         detail = 'финальный ответ'
 
     log_step('decide', detail=detail, model=settings.LM_STUDIO_MODEL_HEAVY,
-             seconds=time.monotonic() - started)
-    return {'messages': new_messages, 'pending_tools': pending, 'final': final}
+             seconds=time.monotonic() - started, prompt_tokens=pt, completion_tokens=ct)
+    return {'messages': new_messages, 'pending_tools': pending, 'final': final,
+            'llm_calls': state.get('llm_calls', 0) + 1,
+            'prompt_tokens': state.get('prompt_tokens', 0) + pt,
+            'completion_tokens': state.get('completion_tokens', 0) + ct}
 
 
 def route_decide(state: AgentState) -> str:
@@ -153,10 +168,13 @@ def build_graph(confirm: Callable[[str, dict], bool] | None = None):
         """Исполнить запрошенные моделью инструменты и вернуть результаты модели.
         """
         new_messages = list(state['messages'])
+        escalated = state.get('escalated', False)
         for tc in state['pending_tools']:
             started = time.monotonic()
             args = _parse_arguments(tc['arguments'])
             result = toolkit.execute_tool(tc['name'], args, confirm=confirm)
+            if result.get('escalated'):
+                escalated = True
             new_messages.append({
                 'role': 'tool',
                 'tool_call_id': tc['id'],
@@ -172,7 +190,8 @@ def build_graph(confirm: Callable[[str, dict], bool] | None = None):
             limit_note_sent = True
         return {'messages': new_messages, 'pending_tools': [], 'steps': steps,
                 'limit_note_sent': limit_note_sent,
-                'tools_used': state.get('tools_used', 0) + len(state['pending_tools'])}
+                'tools_used': state.get('tools_used', 0) + len(state['pending_tools']),
+                'escalated': escalated}
 
     builder = StateGraph(AgentState)
     builder.add_node('classify', classify)

@@ -1,12 +1,9 @@
 import json
 import sys
-from pathlib import Path
+import time
 
-# Проверяем, что корень проекта доступен в sys.path при запуске
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
+from agent import metrics, rag, toolkit
 from agent import orchestrator as agent_graph
-from agent import rag, toolkit
 from config import settings
 
 EXIT_WORDS = {'exit', 'quit', 'q', 'выход'}
@@ -34,6 +31,15 @@ def ask_email() -> str:
             continue
         print(f'  Здравствуйте, {email}! Опишите вашу проблему.')
         return email
+
+
+def _outcome(result: dict, raw_final: str | None) -> str:
+    """Классифицировать исход запуска для метрик: resolved / escalated / failed."""
+    if result.get('escalated'):
+        return 'escalated'
+    if raw_final and raw_final.strip():
+        return 'resolved'
+    return 'failed'
 
 
 def main() -> int:
@@ -75,11 +81,33 @@ def main() -> int:
             'tools_used': 0,
             'nudged': False,
         }
+        started = time.monotonic()
         result = app.invoke(initial)
-        final = result.get('final') or 'Не удалось сформировать ответ.'
+        duration = time.monotonic() - started
+        raw_final = result.get('final')
+        final = raw_final or 'Не удалось сформировать ответ.'
+        outcome = _outcome(result, raw_final)
         history.append({'role': 'user', 'content': user_input})
         history.append({'role': 'assistant', 'content': final})
+        metrics.record_run({
+            'source': 'interactive',
+            'email': email,
+            'user_input': user_input,
+            'topic': result.get('topic', ''),
+            'duration_sec': round(duration, 2),
+            'llm_calls': result.get('llm_calls', 0),
+            'prompt_tokens': result.get('prompt_tokens', 0),
+            'completion_tokens': result.get('completion_tokens', 0),
+            'tools_used': result.get('tools_used', 0),
+            'escalated': result.get('escalated', False),
+            'outcome': outcome,
+            'final_len': len(final),
+        })
         print(f'\n🤖 Ассистент: {final}')
+        pt = result.get('prompt_tokens', 0)
+        ct = result.get('completion_tokens', 0)
+        print(f'⏱ {duration:.1f}s · LLM-вызовов {result.get("llm_calls", 0)} · '
+              f'токенов {pt + ct} · ≈ ${metrics.compute_cost(pt, ct):.4f}')
 
     return 0
 

@@ -18,20 +18,28 @@ DEBUG = env('DEBUG')
 LM_STUDIO_HOST = env('LM_STUDIO_HOST', default='http://localhost:1234/v1')
 LM_STUDIO_API_KEY = env('LM_STUDIO_API_KEY', default='lm-studio')
 
-# Тяжёлая и лёгкая модели (в учебном проекте — одна и та же, см. .env.example)
+# Тяжёлая и лёгкая модели
 LM_STUDIO_MODEL_HEAVY = env('LM_STUDIO_MODEL_HEAVY', default='')
 LM_STUDIO_MODEL_LIGHT = env('LM_STUDIO_MODEL_LIGHT', default='')
 
 # Embedding-модель для векторной памяти (RAG)
 EMBEDDING_MODEL = env('EMBEDDING_MODEL', default='text-embedding-nomic-embed-text-v1.5')
 
-# Каталог векторной базы данных Chroma (создаётся при первом запуске)
+# Каталог векторной базы данных Chroma
 CHROMA_DIR = BASE_DIR / 'data' / 'chroma'
 # Имя коллекции в Chroma (база знаний для RAG)
 CHROMA_COLLECTION = env('CHROMA_COLLECTION', default='support_kb')
 
 # Файл пошагового лога агентного цикла (data/trace.jsonl)
 TRACE_FILE = BASE_DIR / 'data' / env('TRACE_FILE_NAME', default='trace.jsonl')
+
+# Файл метрик запусков агента (data/metrics.jsonl)
+METRICS_FILE = BASE_DIR / 'data' / env('METRICS_FILE_NAME', default='metrics.jsonl')
+
+# Условная стоимость токенов для метрики «стоимость»
+# (локальная LLM почти бесплатна — значения ориентировочные, для оценки)
+COST_PER_1K_INPUT = env.float('COST_PER_1K_INPUT', default=0.10)
+COST_PER_1K_OUTPUT = env.float('COST_PER_1K_OUTPUT', default=0.40)
 
 # Сервисы-эмуляторы (см. .env.example)
 LDAP_SERVICE_HOST = env('LDAP_SERVICE_HOST', default='localhost')

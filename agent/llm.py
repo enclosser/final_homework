@@ -1,8 +1,20 @@
+import time
 from typing import Any
 
-from openai import OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI, RateLimitError
 
 from config import settings
+
+# Повторы при временных сбоях LLM
+MAX_RETRIES = 3
+RETRY_BACKOFF_SEC = 1.5
+
+
+def _is_retryable(exc: Exception) -> bool:
+    """Временные ошибки, которые стоит повторить: сеть, таймаут, лимит, 5xx."""
+    if isinstance(exc, (APIConnectionError, APITimeoutError, RateLimitError)):
+        return True
+    return isinstance(exc, APIStatusError) and exc.status_code >= 500
 
 
 def _client() -> OpenAI:
@@ -23,6 +35,9 @@ def chat(
     tool_choice: str | dict | None = 'auto',
 ) -> Any:
     """Вызвать chat-модель без стриминга и вернуть сырой ответ API.
+
+    При временных сбоях (сеть/таймаут/лимит/5xx) делает повторные попытки
+    с экспоненциальной паузой — защита от однократных сбоев.
     """
     model = settings.LM_STUDIO_MODEL_HEAVY if route == 'heavy' else settings.LM_STUDIO_MODEL_LIGHT
     kwargs: dict[str, Any] = {'model': model, 'messages': messages, 'temperature': 0.0}
@@ -30,7 +45,17 @@ def chat(
         # Схемы инструментов передаём, только когда они нужны, без этого параметра модель просто отвечает текстом.
         kwargs['tools'] = tools
         kwargs['tool_choice'] = tool_choice
-    return _client().chat.completions.create(**kwargs)
+
+    client = _client()
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            return client.chat.completions.create(**kwargs)
+        except Exception as exc:  # noqa: BLE001
+            if attempt == MAX_RETRIES or not _is_retryable(exc):
+                raise
+            delay = RETRY_BACKOFF_SEC ** attempt
+            print(f'  [llm] сбой {type(exc).__name__}, повтор через {delay:.1f}s ({attempt + 1}/{MAX_RETRIES})')
+            time.sleep(delay)
 
 
 def complete(

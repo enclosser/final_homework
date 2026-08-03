@@ -7,7 +7,11 @@ TRACE_FILE = settings.TRACE_FILE
 
 
 def log_step(step: str, *, detail: str = '', model: str = '', seconds: float = 0.0, **extra) -> None:
-    """Записать один шаг агентного цикла."""
+    """Записать один шаг агентного цикла.
+
+    Если переданы prompt_tokens/completion_tokens — в запись добавляются
+    суммарные токены и их условная стоимость.
+    """
     record = {
         'ts': round(time.time(), 3),
         'step': step,
@@ -16,6 +20,14 @@ def log_step(step: str, *, detail: str = '', model: str = '', seconds: float = 0
         'seconds': round(seconds, 3),
         **extra,
     }
+    pt = record.get('prompt_tokens') or 0
+    ct = record.get('completion_tokens') or 0
+    if pt or ct:
+        record['tokens_total'] = pt + ct
+        record['cost_usd'] = round(
+            pt / 1000 * settings.COST_PER_1K_INPUT + ct / 1000 * settings.COST_PER_1K_OUTPUT,
+            6,
+        )
 
     TRACE_FILE.parent.mkdir(parents=True, exist_ok=True)
 
